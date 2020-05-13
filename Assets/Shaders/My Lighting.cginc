@@ -85,11 +85,6 @@ Interpolators MyVertexProgram (VertexData v)
 	i.uv.xy = TRANSFORM_TEX(v.uv, _MainTex);
 	i.uv.zw = TRANSFORM_TEX(v.uv, _DetailTex);
 
-	//#if defined(SHADOWS_SCREEN)
-		//i.shadowCoordinates = ComputeScreenPos(i.position);
-		//i.shadowCoordinates.xy = (float2(i.position.x - i.position.y) + i.position.w) * 0.5; // / i.position.w;
-		//i.shadowCoordinates.zw = i.position.zw;
-	//#endif
 	TRANSFER_SHADOW(i);
 
 	ComputeVertexLightColor(i);
@@ -106,11 +101,7 @@ UnityLight CreateLight (Interpolators i)
 		light.dir = _WorldSpaceLightPos0.xyz;
 	#endif
 
-	//#if defined(SHADOWS_SCREEN)
-		//float attenuation = SHADOW_ATTENUATION(i); //tex2d(_ShadowMapTexture, i.shadowCoordinates.xy / i.shadowCoordinates.w);
-	//#else
-		UNITY_LIGHT_ATTENUATION(attenuation, i, i.worldPos);
-	//#endif
+	UNITY_LIGHT_ATTENUATION(attenuation, i, i.worldPos);
 	
 	light.color = _LightColor0.rgb * attenuation;
 	light.ndotl = DotClamped(i.normal, light.dir);
@@ -129,6 +120,8 @@ UnityIndirect CreateIndirectLight (Interpolators i)
 
 	#if defined(FORWARD_BASE_PASS)
 		indirectLight.diffuse += max(0, ShadeSH9(float4(i.normal, 1)));
+		float3 envSample = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, i.normal);
+		indirectLight.specular = envSample;
 	#endif
 
 	return indirectLight;
